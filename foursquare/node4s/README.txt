@@ -1,0 +1,2 @@
+NOTE:
+This server is just a simple server that has only one purpose. That purpose is to so that the Java Foursquare API calls have a URL to redirect back to. The page that is rendered simply displays the authorization code that is returned from Foursquare. This code is needed for the rest of the Java examples so that they can access protected resources.
