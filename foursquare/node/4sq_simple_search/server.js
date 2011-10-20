@@ -14,6 +14,7 @@ var config = {
 
 var fsq = require('node-foursquare')(config);
 var usersById = {};
+var fsqAccessToken = {};
 
 everyauth.foursquare
   .appId(config.secrets.clientId)
@@ -31,6 +32,7 @@ everyauth.foursquare
     var user_key = 'user:'+ fsqMetaData.id;
     console.log(user_key);
     var user = foursquare.get_user(accessTok, fsqMetaData);
+    fsqAccessToken = accessTok;
     util.inspect(user, true, null);
     usersById[user_key] = user;
     promise.fulfill(user);
@@ -69,8 +71,8 @@ app.configure('production', function() {
 });
 
 app.get('/', function(req, res) {
-  fsq.getRecentCheckins({}, accessTo)
-  res.render('index', { layout: false });
+  //  fsq.Checkins.getRecentCheckins({}, fsqAccessToken, function(checkinsObject) {
+  res.render('index', { checkins: '', layout: false });
 });
 
 everyauth.helpExpress(app);
