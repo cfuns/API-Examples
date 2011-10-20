@@ -4,9 +4,14 @@
   </head>
   <body>
     <div>
+      <% if (!everyauth.loggedIn) { %>
       <a href="/auth/foursquare">
         <img src="/img/connect-black.png"/>
       </a>
+      <% } else { %>
+      Hello FourSquare User: <%= everyauth.user.first %> <%=
+      everyauth.user.last %>
+      <% } %>
     </div>
   </body>
 </html>

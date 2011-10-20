@@ -1,36 +1,19 @@
 var express = require('express'),
     util = require('util'),
     everyauth = require('everyauth'),
+    foursquare = require('./lib/foursquare'),
     Promise   = everyauth.Promise;
   
 var config = {
   "secrets" : {
     "clientId" : 'AA2ZLYDVERDRTBCLEI5QHCLSOWUNLNB02XTLFVB0OJHOFFPL',
     "clientSecret" : 'ZKHQWVZH45SYTRKZAN4RXNT2MHHTGYP5K0OOTVRBP1DN4HX5',
-    "redirectUrl" : 'http://localhost:8000/auth/foursquare/callback'
+    "redirectUrl" : 'http://localhost:3000/auth/foursquare/callback'
   }
 };
 
-var foursquare = require('node-foursquare')(config);
-
+var fsq = require('node-foursquare')(config);
 var usersById = {};
-var nextUserId = 0;
-var usersByFoursquareId = {};
-
-function addUser (source, sourceUser) {
-  var user;
-  if (arguments.length === 1) { // password-based
-    user = sourceUser = source;
-    user.id = ++nextUserId;
-    return usersById[nextUserId] = user;
-  } else { // non-password-based
-    user = usersById[++nextUserId] = {id: nextUserId};
-    user[source] = sourceUser;
-  }
-  return user;
-}
-
-
 
 everyauth.foursquare
   .appId(config.secrets.clientId)
@@ -43,11 +26,11 @@ everyauth.foursquare
     // If you do not configure this, everyauth renders a default fallback
     // view notifying the user that their authentication failed and why.
   })
-  .findOrCreateUser(function (sess, accessTok, accessTokExtra, fqMetaData) {
+  .findOrCreateUser(function (sess, accessTok, accessTokExtra, fsqMetaData) {
     var promise = this.Promise();
-    var user_key = 'user:'+ fqMetaData.id;
+    var user_key = 'user:'+ fsqMetaData.id;
     console.log(user_key);
-    var user = foursquare.get_user(accessTok, fqMetaData);
+    var user = foursquare.get_user(accessTok, fsqMetaData);
     util.inspect(user, true, null);
     usersById[user_key] = user;
     promise.fulfill(user);
@@ -56,15 +39,16 @@ everyauth.foursquare
   .entryPath('/auth/foursquare')
   .redirectPath('/');
 
-everyauth.everymodule
-  .findUserById( function (id, callback) {
-  callback(null, usersById[id]);
+everyauth.everymodule.findUserById( function (id, callback) {
+  var user_key = 'user:' + id;
+  callback(null, usersById[user_key]);
 });
 
 var app = express.createServer(
   express.logger()
 , express.bodyParser()
 , express.cookieParser()
+, express.session({ secret: "foursquare_rocks" })
 , express.favicon()
 , everyauth.middleware()
 );
@@ -85,6 +69,7 @@ app.configure('production', function() {
 });
 
 app.get('/', function(req, res) {
+  fsq.getRecentCheckins({}, accessTo)
   res.render('index', { layout: false });
 });
 
